@@ -46,6 +46,12 @@ elif os.path.exists('/opt/homebrew/include/CGAL/'):
 else:
     cgal_include = '/usr/local/include/CGAL/'
 
+vcpkg_path = r"D:\GitHub\vcpkg\installed\x64-windows"
+print("Using vcpkg...")
+cgal_include = os.path.join(vcpkg_path, "CGAL")
+library_dirs.append(os.path.join(vcpkg_path, "lib"))
+include_dirs.append(os.path.join(vcpkg_path, "include")) # this should contain a CGAL subfolder
+
 cgal_version = None
 if os.path.exists(os.path.join(cgal_include, 'version.h')):
     with open(os.path.join(cgal_include, 'version.h'), 'r') as f:
@@ -133,13 +139,20 @@ ext_modules = [
         ],
         include_dirs=include_dirs,
         library_dirs=library_dirs,
-        libraries=cgal_libs + ['mpfr',
-                   'gmp', 
-                   'boost_thread-mt' if boost_mt else 'boost_thread',
-                   'boost_atomic-mt' if boost_mt else 'boost_atomic',
-                   'boost_system',
-                   'boost_date_time',
-                   'boost_chrono'],
+        libraries=cgal_libs + [
+            "mpfr",
+            "gmp",
+            "boost_thread-vc140-mt",
+            "boost_atomic-vc140-mt",
+            "boost_system-vc140-mt",
+            "boost_date_time-vc140-mt",
+            "boost_chrono-vc140-mt",
+            #'boost_thread-mt' if boost_mt else 'boost_thread',
+            #'boost_atomic-mt' if boost_mt else 'boost_atomic',
+            #'boost_system',
+            #'boost_date_time',
+            #'boost_chrono'
+        ],
         language='c++'
     ),
 ]
@@ -177,12 +190,15 @@ def cpp_flag(compiler):
 
 class BuildExt(build_ext):
     """A custom build extension for adding compiler-specific options."""
+    # https://stackoverflow.com/questions/76754897/how-can-i-turn-on-language-dialect-cxx23-in-visual-studio-2019
+    # see issue with Boost at https://github.com/boostorg/geometry/issues/1213
+    # attempts to build a static build without requiring DLLs to be deplyed (using /MT) failed
     c_opts = {
-        'msvc': ['/EHsc', '/std:c++14'],
+        'msvc': ['/EHsc', '/std:c++14'], # '/std:c++14' only c++20 std:c++latest '/MT'
         'unix': [],
     }
     l_opts = {
-        'msvc': [],
+        'msvc': [], '/MT'
         'unix': [],
     }
 
@@ -234,6 +250,10 @@ setup(
     extras_require={
         "drawing": ["matplotlib"],
     },
+    # https://github.com/pypa/packaging-problems/issues/79#issuecomment-144702685
+    #include_package_data=True, # automatically include anything listed in MANIFEST.in in the package_data
+    # data_files=[('',  glob.glob('DLLs/*.dll'))], # data files are placed in a folder relative to the root of the Python install
+    package_data={'skgeom': ['*.dll']}, # DLLs have to be in the actual package folder to be included (not the source folder)
     cmdclass={'build_ext': BuildExt},
     zip_safe=False,
     packages=['skgeom'],
