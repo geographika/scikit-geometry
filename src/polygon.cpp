@@ -33,9 +33,9 @@ void build_polygon_from_vertices(Polygon_2& poly, const py::array_t<double>& ver
     if (r.shape(1) != 2) {
         throw std::runtime_error("vertices need to be 2 dimensional");
     }
-    const size_t n = r.shape(0);
+    const ssize_t n = r.shape(0);
 
-    for (size_t i = 0; i < n; i++) {
+    for (ssize_t i = 0; i < n; i++) {
         poly.push_back(Point_2(r(i, 0), r(i, 1)));
     } 
 }
