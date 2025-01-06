@@ -14,25 +14,39 @@ Boost libraries needed to be renamed in setup.py or get:
 ```
 
 First setup vcpkg and install CGAL. See https://github.com/microsoft/vcpkg#quick-start-windows. 
+Run the following in PowerShell (to run takes ~40 minutes):
 
 ```
 cd D:\GitHub
 git clone https://github.com/microsoft/vcpkg
-bootstrap-vcpkg.bat
-vcpkg install cgal:x64-windows
-vcpkg integrate install
+cd .\vcpkg\
+.\bootstrap-vcpkg.bat
+./vcpkg install cgal:x64-windows
+./vcpkg integrate install
 ```
+
+Only works with a specific version of CGAL?
+See D:\GitHub\vcpkg\ports\cgal\vcpkg.json
+
 
 Now get scikit-geometry and build the wheel:
 
 ```
+# git clone https://github.com/scikit-geometry
 cd D:\GitHub\scikit-geometry
-git clone https://github.com/scikit-geometry
-C:\Python310\Scripts\pip install wheel
-C:\Python310\Scripts\pip install pybind11
-C:\Python310\Scripts\pip install numpy
-C:\Python310\python setup.py bdist_wheel
+C:\Python312\python -m venv C:\VirtualEnvs\scikit-build
+C:\VirtualEnvs\scikit-build\Scripts\activate.ps1
+
+pip install wheel
+pip install pybind11
+pip install numpy
+pip install setuptools
+
+# run 
+python setup.py bdist_wheel
 ```
+
+# D:\GitHub\vcpkg\installed\x64-windows\include\CGAL/config.h(154): fatal error C1189: #error:  "CGAL requires C++ 17"
 
 Test in a new venv:
 
@@ -51,6 +65,16 @@ pip show -f skgeom
 
 The following eerror `ImportError: DLL load failed while importing _skgeom: The specified module could not be found.`
 means the DLLs are not found and may need to add os.add_dll_directory to the script. 
+
+## Older Versions
+
+Need CGAL 5.6 to work correctly or get errors.
+
+cd D:\GitHub\vcpkg
+./vcpkg list
+
+./vcpkg remove cgal
+./vcpkg install cgal
 
 ## Alternative Conda Install
 
